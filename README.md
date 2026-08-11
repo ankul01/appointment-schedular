@@ -21,7 +21,9 @@ make verify         # full Maven verify lifecycle
 ## Security tooling
 
 - Dependabot weekly updates (Maven + GitHub Actions)
-- GitHub Actions CI: unit tests, dependency-review on PRs, Trivy fs scan
+- GitHub Actions CI: unit tests + Trivy filesystem CVE scan (fails on HIGH/CRITICAL)
+- Optional GitHub Dependency Review on PRs (needs **Dependency graph** enabled under
+  [Code security settings](https://github.com/ankul01/appointment-schedular/settings/security_analysis))
 - Maven Wrapper `distributionSha256Sum` pins the downloaded Maven zip
 
 ## Layout
