@@ -1,5 +1,14 @@
 # Build output
 out/
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
 
 # Compiled class file
 *.class
