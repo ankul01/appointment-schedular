@@ -5,22 +5,26 @@ Multi-tenant appointment / service scheduler (LLD practice).
 ## Stack
 
 - Java 21
-- Maven
-- Spring Boot 3.4
+- Maven (wrapper with SHA-256 pinned distribution)
+- Spring Boot 3.5.16
 
 ## Build & test
 
 ```bash
 ./mvnw test
-./mvnw -DskipTests package
+make build          # runs tests, then packages
+make verify         # full Maven verify lifecycle
 ```
 
-Or via Make:
+`make package` skips tests on purpose — do **not** use it as a quality gate. CI runs `./mvnw test` and fails on HIGH/CRITICAL dependency findings.
 
-```bash
-make test
-make build
-```
+## Security tooling
+
+- Dependabot weekly updates (Maven + GitHub Actions)
+- GitHub Actions CI: unit tests + Trivy filesystem CVE scan (fails on HIGH/CRITICAL)
+- Optional GitHub Dependency Review on PRs (needs **Dependency graph** enabled under
+  [Code security settings](https://github.com/ankul01/appointment-schedular/settings/security_analysis))
+- Maven Wrapper `distributionSha256Sum` pins the downloaded Maven zip
 
 ## Layout
 
