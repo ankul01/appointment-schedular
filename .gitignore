@@ -10,6 +10,27 @@ target/
 .project
 .settings/
 
+# Secrets & local config (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.jks
+*.key
+*_rsa
+*_ecdsa
+*_ed25519
+credentials.json
+**/credentials*.json
+**/secrets/
+**/application-local.yml
+**/application-local.properties
+**/application-secret.yml
+**/application-secret.properties
+**/application-prod.yml
+**/application-prod.properties
+
 # Compiled class file
 *.class
 
