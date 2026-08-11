@@ -1,20 +1,18 @@
-# Appointment scheduler — compile skeleton (javac only; no Maven/Gradle required).
+# Appointment scheduler — Maven / Spring Boot
 
-SRC_ROOT := .
-PKG_ROOT := scheduling
-OUT      := out/classes
+.PHONY: build test clean tree
 
-SOURCES := $(shell find $(PKG_ROOT) -name '*.java' | sort)
-
-.PHONY: build clean tree
+MVN ?= ./mvnw
 
 build:
-	@mkdir -p $(OUT)
-	javac --release 21 -d $(OUT) $(SOURCES)
-	@echo "OK: compiled $$(echo $(SOURCES) | wc -w | tr -d ' ') source(s) → $(OUT)"
+	$(MVN) -q -DskipTests package
+
+test:
+	$(MVN) test
 
 clean:
+	$(MVN) clean
 	rm -rf out
 
 tree:
-	@find $(PKG_ROOT) -type f -name '*.java' | sort
+	@find src -type f -name '*.java' | sort
