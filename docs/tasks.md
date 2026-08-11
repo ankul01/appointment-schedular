@@ -40,8 +40,8 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - **Done when:** empty modules / packages exist for AvailabilityService, SchedulingService, SlotLockManager, BookingRuleEngine, SlotRepository, AppointmentRepository; build runs
 
 ### T0.2 — Core enums & value types
-- [ ] Implement `ResourceType`, `SlotStatus`, `AppointmentStatus`, `RequiredResourceMode`, `BookingActor`
-- [ ] Implement `TimeRange`, `SlotView`, `HoldResult`, `BookableWindow`
+- [x] Implement `ResourceType`, `SlotStatus`, `AppointmentStatus`, `RequiredResourceMode`, `BookingActor`
+- [x] Implement `TimeRange`, `SlotView`, `HoldResult`, `BookableWindow`
 - **LLD:** §6.2, §6.4, §7.2
 - **Done when:** types compile; `AppointmentStatus` has only `CONFIRMED` / `CANCELLED` (no `RESCHEDULED`)
 
