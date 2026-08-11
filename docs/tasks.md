@@ -4,6 +4,8 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 
 **How to use:** check boxes as work lands. Tasks are sized to be independently implementable; follow **Depends on** when order matters. Each task lists LLD sections and acceptance criteria.
 
+**Tests (required):** every task must ship focused unit tests under `src/test/java` covering its acceptance criteria. Prefer plain JUnit 5 for domain/value types; use Spring Boot test support when wiring beans/context. A task is not done until `./mvnw test` stays green.
+
 **Legend**
 
 | Status | Meaning |
@@ -36,27 +38,32 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 
 ### T0.1 — Project skeleton
 - [x] Create package layout aligned with LLD components (`api`, `domain`, `core`, `spi` / repos, `infra`)
+- [x] Maven + Spring Boot build (`pom.xml`, `./mvnw`, `SchedulingApplication`)
+- [x] Unit tests: Spring context smoke test (`SchedulingApplicationTest`)
 - **LLD:** §5
-- **Done when:** empty modules / packages exist for AvailabilityService, SchedulingService, SlotLockManager, BookingRuleEngine, SlotRepository, AppointmentRepository; build runs
+- **Done when:** empty modules / packages exist for AvailabilityService, SchedulingService, SlotLockManager, BookingRuleEngine, SlotRepository, AppointmentRepository; `./mvnw test` runs
 
 ### T0.2 — Core enums & value types
 - [x] Implement `ResourceType`, `SlotStatus`, `AppointmentStatus`, `RequiredResourceMode`, `BookingActor`
 - [x] Implement `TimeRange`, `SlotView`, `HoldResult`, `BookableWindow`
+- [x] Unit tests under `src/test/java/scheduling/domain`
 - **LLD:** §6.2, §6.4, §7.2
-- **Done when:** types compile; `AppointmentStatus` has only `CONFIRMED` / `CANCELLED` (no `RESCHEDULED`)
+- **Done when:** types compile; `AppointmentStatus` has only `CONFIRMED` / `CANCELLED` (no `RESCHEDULED`); domain unit tests pass
 
 ### T0.3 — Request / error contracts
 - [ ] Implement `BookingRequest` (incl. `holdToken`, `actor`, `bypassLeadTime`, `expectedVersions`)
 - [ ] Implement exceptions: `SlotTakenException`, `ValidationException`, `UnknownTenantException`, `AppointmentNotFoundException`, `HoldExpiredException`, `IdempotencyConflictException`
+- [ ] Unit tests for request construction / exception semantics
 - **LLD:** §7.2, §7.3
-- **Done when:** DTO + error types match LLD names/semantics
+- **Done when:** DTO + error types match LLD names/semantics; tests pass
 
 ### T0.4 — Service interfaces
 - [ ] Define `AvailabilityService`, `SchedulingService`, `SlotLockManager`, `BookingRuleEngine`
 - [ ] Define `SlotRepository`, `AppointmentRepository` method signatures
+- [ ] Compile-only / contract tests (method signatures present; cancel/reschedule take `requestId`)
 - **LLD:** §6.3, §7.1
 - **Depends on:** T0.2, T0.3
-- **Done when:** interfaces match LLD; cancel/reschedule take `requestId`
+- **Done when:** interfaces match LLD; cancel/reschedule take `requestId`; tests pass
 
 ---
 
@@ -71,12 +78,14 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T1.2 — Appointment entity
 - [ ] Model `Appointment` with `requestId`, `slotIds`, `serviceCenterId`, status
 - [ ] Support confirm, cancel, `replaceSlots` (reschedule keeps `CONFIRMED`)
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §6.2, §8.5, R13
 - **Done when:** reschedule updates slots on same row; status stays `CONFIRMED`
 
 ### T1.3 — Tenant / center / resource / service type models
 - [ ] `Tenant`, `ServiceCenter` (timezone, `slotMinutes`), `Resource`, `ServiceType`
 - [ ] `Customer` entity
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §6.1, §10.1
 - **Done when:** models carry `tenantId` where required
 
@@ -89,6 +98,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 
 ### T1.5 — TenantContext & resolver port
 - [ ] `TenantContext` + `TenantResolver`; unknown tenant → `UnknownTenantException`
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §11.1
 - **Done when:** resolve fails closed for unknown tenant
 
@@ -99,6 +109,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T2.1 — Core tenant tables
 - [ ] DDL: `tenant`, `customer`, `service_center`, `resource`, `service_type`, `resource_certification`
 - [ ] Indexes: `idx_customer_tenant`, `idx_center_tenant`, `idx_resource_center`
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §10.1, R8, R9
 - **Done when:** migration applies cleanly
 
@@ -106,6 +117,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] DDL: `business_calendar`, `holiday_calendar`, `slot`
 - [ ] Unique `uq_slot_resource_start`; partial avail index `idx_slot_avail_scan`
 - [ ] Slot columns: `version`, `hold_expires_at`, `hold_token`, status check constraint
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §10.1, R1, R7, R8
 - **Depends on:** T2.1
 - **Done when:** schema matches LLD; no partial unique on BOOKED-only (R17)
@@ -114,6 +126,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] DDL: `appointment`, `appointment_slot`, `scheduling_mutation`, `service_center_calendar_version`, `outbox`
 - [ ] Unique `(tenant_id, request_id)` on appointment
 - [ ] Unique `uq_active_slot_occupancy` on `(tenant_id, slot_id)` for occupancy integrity
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §10.1, R3, R6, R12
 - **Depends on:** T2.1, T2.2
 - **Done when:** all LLD tables + critical unique indexes exist
@@ -127,6 +140,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] `claimHeld`: HELD + matching `hold_token` + not expired + version
 - [ ] `hold`: AVAILABLE → HELD with server-generated `holdToken`
 - [ ] `release`: BOOKED|HELD → AVAILABLE
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §9.2, §10.2, R1, R2
 - **Depends on:** T0.4, T2.2
 - **Done when:** SQL matches LLD; unit/integration tests cover win/lose races and wrong token
@@ -134,6 +148,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T3.2 — SlotRepository: availability scan
 - [ ] Query AVAILABLE + expired HELD for center/range/resource type
 - [ ] Exclude active HELD from results
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.1, §10.2
 - **Depends on:** T3.1
 - **Done when:** scan returns reclaimable expired holds; omits active holds
@@ -142,6 +157,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] `insertOrGetByRequestId` **inside** transaction (`ON CONFLICT DO NOTHING` + select)
 - [ ] Detect same `requestId` + different payload → `IdempotencyConflictException`
 - [ ] `linkSlots`, `load`, `update`, `runInTransaction`
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.3, §10.2, R3
 - **Depends on:** T2.3
 - **Done when:** concurrent same `requestId` yields one appointment; conflict payload throws
@@ -150,6 +166,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] `mutationSeen` / `recordMutation` on `scheduling_mutation`
 - [ ] Bump / read `service_center_calendar_version`
 - [ ] Enqueue outbox rows in same txn as appointment writes
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.4, §8.5, §10.1, R12
 - **Depends on:** T2.3
 - **Done when:** cancel/reschedule replay is a no-op; calendar version increments on write
@@ -160,12 +177,14 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 
 ### T4.1 — Tenant-scoped repository discipline
 - [ ] Every repo method takes `tenantId` first; queries always filter by it
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §11.1, N5
 - **Depends on:** T3.1–T3.4
 - **Done when:** cross-tenant fixture tests cannot see foreign data
 
 ### T4.2 — BookingRuleEngine (Strategy skeleton)
 - [ ] `BookingRule` interface + `TenantAwareRuleEngine` chaining rules
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §11.2
 - **Depends on:** T0.4, T1.5
 - **Done when:** engine runs ordered rules; first failure throws `ValidationException`
@@ -181,6 +200,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 
 ### T4.4 — CapacityRule
 - [ ] Max concurrent BOOKED bay slots overlapping instant T for center
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §11.2, R14
 - **Depends on:** T4.2, T3.1
 - **Done when:** booking above capacity rejected; under capacity allowed
@@ -192,18 +212,21 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T5.1 — SlotLockManager
 - [ ] `hold(tenantId, slotId, ttl, expectedVersion)` → `HoldResult` with `holdToken`
 - [ ] `release(tenantId, slotId, holdToken)` with token check
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §7.1, §8.2, R1, R19
 - **Depends on:** T3.1
 - **Done when:** lost race returns `success=false`; naming is `holdToken` everywhere
 
 ### T5.2 — Expired-hold reclaim on claim path
 - [ ] Ensure `claim` books expired HELD without requiring sweeper
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.2, §9.2, R2
 - **Depends on:** T3.1
 - **Done when:** test books expired HELD via `claim` without prior sweeper run
 
 ### T5.3 — Hold expiry sweeper job
 - [ ] Background job every ~60s: expired HELD → AVAILABLE (clear token)
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §12.2
 - **Depends on:** T3.1
 - **Done when:** sweeper is idempotent and races safely with `claimHeld`
@@ -216,6 +239,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] Resolve tenant → validate rules → txn: insertOrGet → claim slots ascending → link → outbox → bump calendar version
 - [ ] Support hold confirm via `claimHeld` when `holdToken` present
 - [ ] Multi-slot / bay+tech: single txn, ascending `slot_id` order
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.3, §15.1, R3, R5
 - **Depends on:** T3.1, T3.3, T3.4, T4.3, T5.1
 - **Done when:** race on last slot has one winner; retry same `requestId` returns original; partial multi-slot failure rolls back
@@ -223,6 +247,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T6.2 — cancel (idempotent)
 - [ ] Mark cancelled, release slots ascending, record mutation, outbox, bump calendar version
 - [ ] Replay same `requestId` is no-op
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.4, R12
 - **Depends on:** T3.4, T6.1
 - **Done when:** double cancel safe; slots become AVAILABLE
@@ -230,12 +255,14 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T6.3 — reschedule (claim-new-then-release-old)
 - [ ] Idempotent on `requestId`; same appointment row stays `CONFIRMED`
 - [ ] Fail closed if new claim fails (old slots unchanged)
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.5, R13
 - **Depends on:** T6.1, T3.4
 - **Done when:** new slot taken aborts cleanly; success moves occupancy; replay returns same appt
 
 ### T6.4 — Concurrent cancel vs reschedule
 - [ ] Use `appointment.version` optimistic lock; loser retries or fails clearly
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §13
 - **Depends on:** T6.2, T6.3
 - **Done when:** concurrent cancel+reschedule never leaves inconsistent slot occupancy
@@ -248,12 +275,14 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] Find consecutive `durationSlots` windows for BAY_ONLY / TECHNICIAN_ONLY
 - [ ] Filter certified resources; include expired HELD as bookable candidates
 - [ ] Return `SlotView` / windows with `expectedVersions`
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.1, F1
 - **Depends on:** T3.2, T4.3
 - **Done when:** oil-change (1 slot) and multi-slot jobs return correct windows
 
 ### T7.2 — BAY_AND_TECHNICIAN pairing in availability
 - [ ] Emit one `BookableWindow` per valid (bay, technician) pair at start T
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §6.4, §8.1, R4
 - **Depends on:** T1.4, T7.1
 - **Done when:** unpaired free bay/tech alone does not produce a window
@@ -261,6 +290,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T7.3 — Availability cache with calendarVersion
 - [ ] Cache key: `(tenantId, centerId, serviceTypeId, range bucket, calendarVersion)`
 - [ ] TTL 15–60s; bump version on book/cancel/reschedule (no broad blind flush required)
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §8.1, §12.2, R16
 - **Depends on:** T3.4, T7.1
 - **Done when:** after book, new reads miss stale version; claim still authoritative if cache stale
@@ -268,6 +298,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T7.4 — Read replica lag routing (optional config)
 - [ ] Route availability to replica only if lag ≤ budget (e.g. 2s); else primary
 - [ ] Claims always primary
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §12.2, R15
 - **Depends on:** T7.1
 - **Done when:** lag over budget forces primary; documented config knob
@@ -280,6 +311,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] `actor=ADVISOR` + `bypassLeadTime` skips LeadTime/Horizon only
 - [ ] Audit log: advisor_id, rule, appointment_id, timestamp
 - [ ] BusinessHours + Certification never bypassed
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §7.4, §11.3, R10
 - **Depends on:** T4.3, T6.1
 - **Done when:** advisor can book inside lead window; hours/certs still enforced; audit written
@@ -287,6 +319,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T8.2 — blockSlot
 - [ ] Advisor marks slot BOOKED via internal blocked appointment (no customer)
 - [ ] Availability flags blocked slots for advisors
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §7.4
 - **Depends on:** T6.1, T7.1
 - **Done when:** blocked slot not customer-bookable; advisor can unblock via cancel path
@@ -294,6 +327,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T8.3 — Role-based authorization matrix
 - [ ] Enforce JWT claims: `tenant_id`, `role`, `customer_id` / `advisor_id`
 - [ ] Matrix: findAvailable / book / cancel / reschedule / blockSlot / config
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §11.4, R11
 - **Depends on:** T6.x, T8.1, T8.2
 - **Done when:** customer cannot act cross-tenant or on others’ appointments; advisor scoped to center
@@ -307,6 +341,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] Skip closed holidays; `INSERT ON CONFLICT DO NOTHING`
 - [ ] Onboard single resource; hours-change regenerates future AVAILABLE only
 - [ ] DST: use `ZonedDateTime`; skip/flag ambiguous fall-back times
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §12.1, R7
 - **Depends on:** T2.2
 - **Done when:** materializer is idempotent; never overwrites BOOKED/active HELD
@@ -314,18 +349,21 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 ### T9.2 — Outbox publisher
 - [ ] Emit `AppointmentBooked` / `Cancelled` / `Rescheduled` after durable commit
 - [ ] Poll unpublished rows; mark `published_at`
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §5, §8.3–§8.5
 - **Depends on:** T3.4
 - **Done when:** events appear only after successful txn; at-least-once publish with idempotent consumers assumed
 
 ### T9.3 — Cache invalidation wiring
 - [ ] All write paths bump `calendarVersion` after commit
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §12.2, R16
 - **Depends on:** T6.1–T6.3, T7.3
 - **Done when:** book/cancel/reschedule/block all bump version
 
 ### T9.4 — Tenant rate limit on book (optional)
 - [ ] Optional per-tenant book rate limit; DB remains correctness layer
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §12.2
 - **Depends on:** T6.1
 - **Done when:** excess books rejected without affecting claim correctness
@@ -339,6 +377,7 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] Same `requestId` concurrent → one appointment
 - [ ] Multi-slot ascending order; no deadlock under parallel bay+tech books
 - [ ] Hold stolen / wrong token → `HoldExpiredException`
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §9.1, §13, R5
 - **Depends on:** T5.x, T6.1
 - **Done when:** automated tests cover table in §9.1 and §13 critical rows
@@ -357,12 +396,14 @@ Track implementation of [Multi-tenant Appointment / Service Scheduler LLD](../..
 - [ ] Book → cancel → slot free again
 - [ ] Book → reschedule → new window occupied
 - [ ] Advisor block + customer book rejection
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** F1–F9
 - **Depends on:** Phases 5–8
 - **Done when:** demo/script or integration test covers F1–F9
 
 ### T10.4 — LLD decision checklist (sign-off)
 - [ ] Walk §16 Design Decisions Summary; confirm each choice is implemented or explicitly deferred
+- [ ] Unit tests covering this task's acceptance criteria
 - **LLD:** §16
 - **Depends on:** all above
 - **Done when:** checklist filed in this doc or REVIEW notes; no silent drift from v1.1
